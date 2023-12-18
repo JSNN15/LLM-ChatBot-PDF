@@ -36,14 +36,14 @@ def get_text_chunks(text):                     # definiendo función para dividi
 
 def get_vectorstore(text_chunks):
     #embeddings = OpenAIEmbeddings()
-    embeddings = HuggingFaceInstructEmbeddings(model_name="hkunlp/instructor-xl")
+    embeddings = HuggingFaceInstructEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
     vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)   # creando el vectorstore a partir de los chunks
     return vectorstore
 
 
 def get_conversation_chain(vectorstore):
-    #llm = ChatOpenAI()                        # definiendo el objeto llm
-    llm = HuggingFaceHub(repo_id="google/flan-t5-xxl", model_kwargs={"temperature":0.5, "max_length":512})                 # definiendo el objeto llm 
+    llm = ChatOpenAI()                        # definiendo el objeto llm
+    #llm = HuggingFaceHub(repo_id="google/flan-t5-xxl", model_kwargs={"temperature":0.5, "max_length":512})                 # definiendo el objeto llm 
 
     memory = ConversationBufferMemory(                              # definiendo el objeto memory de la librería langchain 
         memory_key='chat_history', return_messages=True)             
