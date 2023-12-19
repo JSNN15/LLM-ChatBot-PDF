@@ -9,6 +9,8 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
 from langchain.llms import HuggingFaceHub
+from InstructorEmbedding import INSTRUCTOR
+
 import os
 
 OPENAI_API_KEY = "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"
@@ -57,12 +59,13 @@ def get_conversation_chain(vectorstore):
 
 def handle_userinput(user_question):                                               # definiendo función para manejar la entrada del usuario 
     # Construye un prompt más específico con la perspectiva deseada
-    prompt = f"Desde la perspectiva de un Ingeniero Eléctrico experto en normativas y estándares eléctricos. Tu tarea es proporcionar respuestas detalladas, precisas y con referencias claras a las fuentes, sin repetir la pregunta en tus respuestas. Tus respuestas deben estar enfocadas solo a los pliegos RIC. Primero responde precisamente lo que se te pregunta y luego agregar un breve comentario. Acota tu respuesta a 80 palabras, salvo que te pidan mas detalles. Al final de la respuesta incluye las citas o referencias con la sección a revisar. La pregunta a responder es: {user_question}?"
-    response = st.session_state.conversation({'question': user_question})           # obteniendo la respuesta del modelo de lenguaje
-    st.session_state.chat_history = response['chat_history']                        # guardando el historial de la conversación
+    prompt = f"Eres un Ingeniero Eléctrico experto en normativas y estándares eléctricos. Tu tarea es proporcionar respuestas detalladas, precisas y con referencias claras a las fuentes, sin repetir la pregunta en tus respuestas. Tus respuestas deben estar enfocadas solo a los pliegos RIC. Primero responde precisamente lo que se te pregunta y luego agregar un breve comentario. Acota tu respuesta a 80 palabras, salvo que te pidan mas detalles. Al final de la respuesta incluye las citas o referencias con la sección a revisar. La pregunta a responder es: {user_question}?"
+    response = st.session_state.conversation({'question': prompt})           # obteniendo la respuesta del modelo de lenguaje
+    st.session_state.chat_history = response['chat_history']       # guardando el historial de la conversación
 
     for i, message in enumerate(st.session_state.chat_history):                 # iterando sobre el historial de la conversación 
         if i % 2 == 0:                                                                      # si el índice es par (mensaje del usuario)
+            message.content = message.content.replace(prompt, user_question)               # eliminando el prompt de la respuesta del usuario
             st.write(user_template.replace(                                     # escribiendo el mensaje del usuario en el template user_template 
                 "{{MSG}}", message.content), unsafe_allow_html=True)            
         else:                                                               # si el índice es impar (mensaje del bot) 
@@ -72,7 +75,7 @@ def handle_userinput(user_question):                                            
 
 def main():                                                                         # definiendo función principal
     load_dotenv()                                                                   # cargando variables de entorno desde el archivo .env 
-    st.set_page_config(page_title="Chat with multiple PDFs",            # configurando la página de Streamlit 
+    st.set_page_config(page_title="Asistente IA SEC Chile",            # configurando la página de Streamlit 
                        page_icon=":books:")                             # título de la página y el ícono de la página (un libro) 
     st.write(css, unsafe_allow_html=True)                               # escribiendo el código CSS en la página de Streamlit 
 
@@ -81,17 +84,17 @@ def main():                                                                     
     if "chat_history" not in st.session_state:                          # si no existe la variable de sesión chat_history 
         st.session_state.chat_history = None                            # inicializando la variable de sesión chat_history en None 
 
-    st.header("Chat with multiple PDFs :books:")                                # escribiendo el título de la página 
-    user_question = st.text_input("Ask a question about your documents:")       # escribiendo el campo de texto para que el usuario ingrese su pregunta 
+    st.header("Asistente IA para normativa Eléctrica SEC - Chile :books:")                                # escribiendo el título de la página 
+    user_question = st.text_input("Haz tu consulta sobre los pliegos técnicos:")       # escribiendo el campo de texto para que el usuario ingrese su pregunta 
     if user_question:                                                           # si el usuario ingresa una pregunta 
         handle_userinput(user_question)                                         # manejando la entrada del usuario 
 
     with st.sidebar:                                                            # barra lateral de la página 
-        st.subheader("Your documents")                                          # título de la barra lateral
+        st.subheader("RIC SEC")                                          # título de la barra lateral
         pdf_docs = st.file_uploader(                                                                        # campo para subir archivos PDF
-            "Upload your PDFs here and click on 'Process'", accept_multiple_files=True)            # texto de ayuda para el campo de subida de archivos PDF
+            "Selecciona tu normativa y dale click a 'Process'", accept_multiple_files=True)            # texto de ayuda para el campo de subida de archivos PDF
         if st.button("Process"):                                                            # botón para procesar los archivos PDF
-            with st.spinner("Processing"):                                              # spinner para indicar que se está procesando los archivos PDF
+            with st.spinner("Procesando"):                                              # spinner para indicar que se está procesando los archivos PDF
                 # get pdf text
                 raw_text = get_pdf_text(pdf_docs)                                       # obteniendo el texto de los archivos PDF
 
