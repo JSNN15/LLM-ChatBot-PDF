@@ -13,7 +13,7 @@ from InstructorEmbedding import INSTRUCTOR
 
 import os
 
-OPENAI_API_KEY = "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"
+OPENAI_API_KEY = "REEMPLAZAR_POR_TU_CLAVE"
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 
 def get_pdf_text(pdf_docs):
